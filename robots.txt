@@ -1,2 +1,3 @@
 User-agent: *
 Allow: /
+Sitemap: https://dg-engenharia.github.io/sitemap.xml
