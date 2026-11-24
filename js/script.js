@@ -41,31 +41,47 @@
   $$('#tabs button').forEach(b => b.addEventListener('click', () => {
     $$('#tabs button').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-selected', x === b); });
     const g = b.dataset.g;
-    grade.classList.toggle('filtrado', g !== 'todos'); grade.classList.toggle('dense', g === 'todos'); grade.classList.toggle('g4', g === 'campo');
-    $$('.sv', grade).forEach((c, i) => { const v = g === 'todos' || c.dataset.g === g; c.classList.toggle('oculto', !v); if (v) { c.style.animation = 'none'; void c.offsetWidth; c.style.animation = ''; c.style.animationDelay = i * 50 + 'ms'; } });
+    grade.classList.toggle('filtrado', g !== 'todos'); grade.classList.toggle('dense', g === 'todos'); 
+    $$('.sv', grade).forEach((c, i) => { const v = g === 'todos' || c.dataset.g.split(' ').includes(g); c.classList.toggle('oculto', !v); if (v) { c.style.animation = 'none'; void c.offsetWidth; c.style.animation = ''; c.style.animationDelay = i * 50 + 'ms'; } });
   }));
 
-  // explorador de camadas
-  const mapa = $('#mapa');
-  if (mapa) {
-    const legUso = () => $('#leg-uso').classList.toggle('on', $('[data-l="uso"]').checked && !$('#leg-decliv').classList.contains('on'));
-    $$('#base button').forEach(b => b.addEventListener('click', () => {
-      $$('#base button').forEach(x => x.classList.toggle('on', x === b));
-      $$('[data-base]', mapa).forEach(m => m.classList.toggle('off', m.dataset.base !== b.dataset.b));
-      $('#leg-decliv').classList.toggle('on', b.dataset.b === 'decliv'); legUso();
+  // explorador de camadas (cenários)
+  $$('#cen button').forEach(b => b.addEventListener('click', () => {
+    $$('#cen button').forEach(x => x.classList.toggle('on', x === b));
+    $$('.exp-un').forEach(u => { u.classList.toggle('oculto', u.dataset.c !== b.dataset.c); if (u.dataset.c === b.dataset.c) u.classList.add('vis2'); });
+  }));
+  $$('.exp-un').forEach(un => {
+    const mapa = $('.mapa', un);
+    const legs = () => {
+      const base = ($('.seg button.on', un) || {}).dataset?.b;
+      $$('.leg', un).forEach(l => {
+        const okL = l.dataset.showL ? $(`[data-l="${l.dataset.showL}"]`, un).checked : true;
+        const okB = l.dataset.showB ? base === l.dataset.showB : true;
+        let on = okL && okB;
+        if (l.dataset.showL && $$('.leg[data-show-b]', un).some(x => x.dataset.showB === base)) on = false;
+        l.classList.toggle('on', on);
+      });
+    };
+    $$('.seg button', un).forEach(b => b.addEventListener('click', () => {
+      $$('.seg button', un).forEach(x => x.classList.toggle('on', x === b));
+      $$('[data-base]', mapa).forEach(m => m.classList.toggle('off', m.dataset.base !== b.dataset.b)); legs();
     }));
-    $$('#explorar input').forEach(c => c.addEventListener('change', () => { $(`[data-lay="${c.dataset.l}"]`, mapa).classList.toggle('off', !c.checked); legUso(); }));
-  }
+    $$('input[data-l]', un).forEach(c => c.addEventListener('change', () => { $(`[data-lay="${c.dataset.l}"]`, mapa).classList.toggle('off', !c.checked); legs(); }));
+    legs();
+  });
 
-  // antes e depois
-  const ad = $('#ad');
-  if (ad) {
+  // antes e depois (com abas)
+  $$('#ad-tabs button').forEach(b => b.addEventListener('click', () => {
+    $$('#ad-tabs button').forEach(x => x.classList.toggle('on', x === b));
+    $$('.ad-un').forEach(u => { u.classList.toggle('oculto', u.dataset.a !== b.dataset.a); $$('.rev', u).forEach(r => r.classList.add('vis2')); });
+  }));
+  $$('.ad').forEach(ad => {
     const top = $('.top', ad), bar = $('.bar', ad); let drag = false;
     const set = x => { const r = ad.getBoundingClientRect(); const p = Math.min(100, Math.max(0, (x - r.left) / r.width * 100)); top.style.clipPath = `inset(0 ${100 - p}% 0 0)`; bar.style.left = p + '%'; };
     ad.addEventListener('pointerdown', e => { drag = true; ad.setPointerCapture(e.pointerId); set(e.clientX); });
     ad.addEventListener('pointermove', e => { if (drag) set(e.clientX); });
     ad.addEventListener('pointerup', () => { drag = false; });
-  }
+  });
 
   // etapas do processo
   const passos = $$('.passo'), txs = $$('.passo-tx');
